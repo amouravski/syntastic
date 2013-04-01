@@ -15,6 +15,8 @@ if exists("g:loaded_syntastic_dart_dart_analyzer_checker")
 endif
 let g:loaded_syntastic_dart_dart_analyzer_checker=1
 
+" This is a good place to put the package root you want to use for the checker.
+" TODO(amouravski): Add automatic package-root finding failsafe.
 if !exists("g:syntastic_dart_analyzer_conf")
     let g:syntastic_dart_analyzer_conf = ''
 endif
@@ -31,11 +33,12 @@ function! SyntaxCheckers_dart_dart_analyzer_GetHighlightRegex(error)
 endfunction
 
 function! SyntaxCheckers_dart_dart_analyzer_GetLocList()
-    let args = !empty(g:syntastic_dart_analyzer_conf) ? ' ' . g:syntastic_dart_analyzer_conf : ''
+    let args = exists("b:syntastic_dart_analyzer_conf") ?
+          \ b.syntastic_dart_analyzer_conf : g:syntastic_dart_analyzer_conf
     let makeprg = syntastic#makeprg#build({
                 \ 'exe': 'dart_analyzer',
                 \ 'args': '--error_format machine',
-                \ 'post_args': args,
+                \ 'post_args': ' '.args,
                 \ 'subchecker': 'dart_analyzer' })
     " Machine readable format looks like:
     " SEVERITY|TYPE|ERROR_CODE|file:FILENAME|LINE_NUMBER|COLUMN|LENGTH|MESSAGE
