@@ -1,7 +1,9 @@
 "============================================================================
 "File:        dart_analyzer.vim
 "Description: Dart syntax checker - using dart_analyzer
-"Maintainer:  Maksim Ryzhikov <rv.maksim at gmail dot com>
+"Maintainer:  Andrei Mouravski <amouravski@gmail.com>
+"Authors:     Maksim Ryzhikov <rv.maksim at gmail dot com>
+"             Andrei Mouravski <amouravski@gmail.com>
 "License:     This program is free software. It comes without any warranty,
 "             to the extent permitted by applicable law. You can redistribute
 "             it and/or modify it under the terms of the Do What The Fuck You
