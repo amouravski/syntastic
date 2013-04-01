@@ -255,6 +255,10 @@ function! s:HighlightErrors()
     for ft in split(fts, '\.')
 
         for item in loclist.toRaw()
+            if has_key(item, 'bufnr') && item['bufnr'] != bufnr('%')
+                continue
+            endif
+
             let group = item['type'] == 'E' ? 'SyntasticError' : 'SyntasticWarning'
 
             if has_key(item, 'hl')
