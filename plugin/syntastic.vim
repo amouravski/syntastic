@@ -106,7 +106,7 @@ augroup END
 
 "refresh and redraw all the error info for this buf when saving or reading
 function! s:UpdateErrors(auto_invoked, ...)
-    if !empty(&buftype)
+    if s:SkipFile()
         return
     endif
 
@@ -132,11 +132,11 @@ function! s:UpdateErrors(auto_invoked, ...)
 
     let loclist = s:LocList()
     if g:syntastic_always_populate_loc_list && loclist.hasErrorsOrWarningsToDisplay()
-        call setloclist(0, loclist.toRaw())
+        call setloclist(0, loclist.filteredRaw())
     endif
 
     if g:syntastic_auto_jump && loclist.hasErrorsOrWarningsToDisplay()
-        call setloclist(0, loclist.toRaw())
+        call setloclist(0, loclist.filteredRaw())
         silent! ll
     endif
 
@@ -186,7 +186,7 @@ function! s:CacheErrors(...)
     call s:ClearCache()
     let newLoclist = g:SyntasticLoclist.New([])
 
-    if filereadable(expand("%"))
+    if !s:SkipFile()
         for ft in s:CurrentFiletypes()
 
             if a:0
@@ -224,8 +224,8 @@ endfunction
 "display the cached errors for this buf in the location list
 function! s:ShowLocList()
     let loclist = s:LocList()
-    if !loclist.isEmpty()
-        call setloclist(0, loclist.toRaw())
+    if loclist.hasErrorsOrWarningsToDisplay()
+        call setloclist(0, loclist.filteredRaw())
         let num = winnr()
         exec "lopen " . g:syntastic_loc_list_height
         if num != winnr()
@@ -254,7 +254,7 @@ function! s:HighlightErrors()
     let fts = substitute(&ft, '-', '_', 'g')
     for ft in split(fts, '\.')
 
-        for item in loclist.toRaw()
+        for item in loclist.filteredRaw()
             if has_key(item, 'bufnr') && item['bufnr'] != bufnr('%')
                 continue
             endif
@@ -291,7 +291,7 @@ function! s:RefreshBalloons()
     let b:syntastic_balloons = {}
     let loclist = s:LocList()
     if loclist.hasErrorsOrWarningsToDisplay()
-        for i in loclist.toRaw()
+        for i in loclist.filteredRaw()
             let b:syntastic_balloons[i['lnum']] = i['text']
         endfor
         set beval bexpr=SyntasticErrorBalloonExpr()
@@ -348,7 +348,7 @@ endfunction
 "the script changes &shellpipe and &shell to stop the screen flicking when
 "shelling out to syntax checkers. Not all OSs support the hacks though
 function! s:OSSupportsShellpipeHack()
-    return !s:running_windows && (s:uname() !~ "FreeBSD") && (s:uname() !~ "OpenBSD")
+    return !s:running_windows && executable('/bin/bash') && (s:uname() !~ "FreeBSD") && (s:uname() !~ "OpenBSD")
 endfunction
 
 function! s:IsRedrawRequiredAfterMake()
@@ -368,6 +368,11 @@ function! s:Redraw()
     else
         redraw!
     endif
+endfunction
+
+" Skip running in special buffers
+function! s:SkipFile()
+    return !empty(&buftype) || !filereadable(expand('%')) || getwinvar(0, '&diff')
 endfunction
 
 function! s:uname()
@@ -408,7 +413,7 @@ function! SyntasticStatuslineFlag()
         let output = substitute(output, '\C%t', loclist.length(), 'g')
 
         "first error/warning line num
-        let output = substitute(output, '\C%F', loclist.toRaw()[0]['lnum'], 'g')
+        let output = substitute(output, '\C%F', loclist.filteredRaw()[0]['lnum'], 'g')
 
         "first error line num
         let output = substitute(output, '\C%fe', num_errors ? errors[0]['lnum'] : '', 'g')
